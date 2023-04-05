@@ -12,8 +12,8 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Notes API')
-    .setDescription('The notes API description')
+    .setTitle('Alert API')
+    .setDescription('The alert API description')
     .setVersion('1.0')
     .build();
 
