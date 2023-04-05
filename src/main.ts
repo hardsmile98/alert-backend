@@ -2,14 +2,25 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const configService = app.get(ConfigService);
+  const URL_CLIENT = configService.get<string>('URL_CLIENT');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
     }),
   );
+  app.setGlobalPrefix('api');
+  app.enableCors({
+    origin: [URL_CLIENT],
+    methods: ['*'],
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Alert API')
@@ -20,6 +31,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(8080);
 }
 bootstrap();
