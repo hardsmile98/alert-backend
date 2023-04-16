@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtGuard } from 'src/auth/guard';
 import { AddChannelDto, ChangePasswordDto } from './dto';
@@ -22,7 +22,7 @@ export class UserController {
     return user;
   }
 
-  @Post('addChannel')
+  @Post('channels')
   addChannel(@GetUser() user: User, @Body() dto: AddChannelDto) {
     return this.userService.addChannel(user, dto);
   }
@@ -30,6 +30,11 @@ export class UserController {
   @Get('channels')
   getChannels(@GetUser() user: User) {
     return this.userService.getChannels(user);
+  }
+
+  @Delete('channels')
+  deleteChannel(@GetUser() user: User, id: number) {
+    return this.userService.deleteChannel(user, id);
   }
 
   @Post('changePassword')

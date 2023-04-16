@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddChannelDto, ChangePasswordDto } from './dto';
 import * as argon from 'argon2';
@@ -65,6 +69,32 @@ export class UserService {
     return await this.prisma.chanel.findMany({
       where: {
         userId: id,
+      },
+      select: {
+        id: true,
+        value: true,
+        type: true,
+      },
+    });
+  }
+
+  async deleteChannel(user: User, id: number) {
+    const { id: userId } = user;
+
+    const matches = await this.prisma.chanel.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
+
+    if (matches) {
+      throw new ForbiddenException('No delete access');
+    }
+
+    return await this.prisma.chanel.delete({
+      where: {
+        id: id,
       },
     });
   }
