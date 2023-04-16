@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtGuard } from 'src/auth/guard';
-import { ChangePasswordDto } from './dto';
+import { AddChannelDto, ChangePasswordDto } from './dto';
 import { GetUser } from 'src/auth/decorator';
 import { User } from '@prisma/client';
 
@@ -13,6 +13,23 @@ export class UserController {
   @Get('me')
   getMe() {
     return {};
+  }
+
+  @Get('profile')
+  getProfle(@GetUser() user: User) {
+    delete user.password;
+
+    return user;
+  }
+
+  @Post('addChannel')
+  addChannel(@GetUser() user: User, @Body() dto: AddChannelDto) {
+    return this.userService.addChannel(user, dto);
+  }
+
+  @Get('channels')
+  getChannels(@GetUser() user: User) {
+    return this.userService.getChannels(user);
   }
 
   @Post('changePassword')

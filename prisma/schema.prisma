@@ -7,6 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Plan {
+  free
+  pro
+}
+
+enum ChannelType {
+  email
+  telegram
+}
+
+model Chanel {
+  id          Int      @id @default(autoincrement())
+  value       String
+  type        ChannelType
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+}
+
 model User {
   id          Int      @id @default(autoincrement())
   firstName   String
@@ -15,4 +33,6 @@ model User {
   password    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  plan        Plan     @default(free)
+  channels    Chanel[]
 }

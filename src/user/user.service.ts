@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ChangePasswordDto } from './dto';
+import { AddChannelDto, ChangePasswordDto } from './dto';
 import * as argon from 'argon2';
 import { User } from '@prisma/client';
 
@@ -32,5 +32,40 @@ export class UserService {
     delete newUserData.password;
 
     return newUserData;
+  }
+
+  async addChannel(user: User, dto: AddChannelDto) {
+    const { value, type } = dto;
+    const { id } = user;
+
+    const matches = await this.prisma.chanel.findFirst({
+      where: {
+        userId: id,
+        value: value,
+        type: type,
+      },
+    });
+
+    if (matches) {
+      throw new BadRequestException('This type of notification already exists');
+    }
+
+    return await this.prisma.chanel.create({
+      data: {
+        userId: id,
+        value: value,
+        type: type,
+      },
+    });
+  }
+
+  async getChannels(user: User) {
+    const { id } = user;
+
+    return await this.prisma.chanel.findMany({
+      where: {
+        userId: id,
+      },
+    });
   }
 }
