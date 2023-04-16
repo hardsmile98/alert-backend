@@ -33,7 +33,7 @@ export class UserController {
   }
 
   @Delete('channels')
-  deleteChannel(@GetUser() user: User, id: number) {
+  deleteChannel(@GetUser() user: User, @Body() id: number) {
     return this.userService.deleteChannel(user, id);
   }
 
