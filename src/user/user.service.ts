@@ -88,13 +88,13 @@ export class UserService {
       },
     });
 
-    if (matches) {
+    if (!matches) {
       throw new ForbiddenException('No delete access');
     }
 
     return await this.prisma.chanel.delete({
       where: {
-        id: id,
+        id,
       },
     });
   }

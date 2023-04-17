@@ -18,7 +18,6 @@ export class UserController {
   @Get('profile')
   getProfle(@GetUser() user: User) {
     delete user.password;
-
     return user;
   }
 
@@ -33,7 +32,8 @@ export class UserController {
   }
 
   @Delete('channels')
-  deleteChannel(@GetUser() user: User, @Body() id: number) {
+  deleteChannel(@GetUser() user: User, @Body() dto) {
+    const { id } = dto;
     return this.userService.deleteChannel(user, id);
   }
 
