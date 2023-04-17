@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtGuard } from 'src/auth/guard';
-import { AddChannelDto, ChangePasswordDto } from './dto';
+import { AddChannelDto, ChangePasswordDto, IdDto } from './dto';
 import { GetUser } from 'src/auth/decorator';
 import { User } from '@prisma/client';
 
@@ -32,7 +32,7 @@ export class UserController {
   }
 
   @Delete('channels')
-  deleteChannel(@GetUser() user: User, @Body() dto) {
+  deleteChannel(@GetUser() user: User, @Body() dto: IdDto) {
     const { id } = dto;
     return this.userService.deleteChannel(user, id);
   }

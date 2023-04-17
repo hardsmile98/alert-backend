@@ -34,7 +34,7 @@ export class MonitorService {
     });
   }
 
-  async pauseMonitor(user: User, id: number) {
+  async changeStatusMonitor(user: User, id: number) {
     const matches = await this.prisma.monitor.findFirst({
       where: {
         id,
@@ -43,15 +43,17 @@ export class MonitorService {
     });
 
     if (!matches) {
-      throw new ForbiddenException('No pause access');
+      throw new ForbiddenException('No change status access');
     }
+
+    const newStatus = matches.status === 'PAUSE' ? 'UP' : 'PAUSE';
 
     return this.prisma.monitor.update({
       where: {
         id,
       },
       data: {
-        status: 'PAUSE',
+        status: newStatus,
       },
     });
   }

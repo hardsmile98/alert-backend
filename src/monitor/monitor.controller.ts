@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtGuard } from 'src/auth/guard';
 import { MonitorService } from './monitor.service';
 import { GetUser } from 'src/auth/decorator';
-import { AddMonitorDto } from './dto';
+import { AddMonitorDto, IdDto } from './dto';
 import { User } from '@prisma/client';
 
 @UseGuards(JwtGuard)
@@ -16,15 +16,15 @@ export class MonitorController {
   }
 
   @Delete('/')
-  deleteMonitor(@GetUser() user: User, @Body() dto) {
+  deleteMonitor(@GetUser() user: User, @Body() dto: IdDto) {
     const { id } = dto;
     return this.monitorService.deleteMonitor(user, id);
   }
 
-  @Delete('/pause')
-  pauseMonitor(@GetUser() user: User, @Body() dto) {
+  @Post('/status')
+  changeStatusMonitor(@GetUser() user: User, @Body() dto: IdDto) {
     const { id } = dto;
-    return this.monitorService.pauseMonitor(user, id);
+    return this.monitorService.changeStatusMonitor(user, id);
   }
 
   @Post('/')

@@ -9,3 +9,8 @@ export class AddChannelDto {
   @IsIn(['email', 'telegram'])
   type: ChannelType;
 }
+
+export class IdDto {
+  @IsNotEmpty()
+  id: number;
+}

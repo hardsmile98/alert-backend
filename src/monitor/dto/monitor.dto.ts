@@ -13,3 +13,8 @@ export class AddMonitorDto {
   @Max(60)
   frequency: number;
 }
+
+export class IdDto {
+  @IsNotEmpty()
+  id: number;
+}
