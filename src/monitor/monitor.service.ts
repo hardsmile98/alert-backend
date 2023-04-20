@@ -5,11 +5,15 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { NotificationService } from 'src/notification/notification.service';
 import { AddMonitorDto } from './dto';
 
 @Injectable()
 export class MonitorService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notification: NotificationService,
+  ) {}
 
   async checkLimit(user: User) {
     const countMonitors = await this.prisma.monitor.count({
