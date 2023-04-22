@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MonitorService } from './monitor.service';
 import { MonitorController } from './monitor.controller';
-import { NotificationModule } from 'src/notification/notification.module';
+import { MonitoringModule } from 'src/monitoring/monitoring.module';
 
 @Module({
   providers: [MonitorService],
   controllers: [MonitorController],
-  imports: [NotificationModule],
+  imports: [MonitoringModule],
 })
 export class MonitorModule {}

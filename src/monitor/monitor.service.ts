@@ -5,14 +5,14 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { NotificationService } from 'src/notification/notification.service';
+import { MonitoringService } from 'src/monitoring/monitoring.service';
 import { AddMonitorDto } from './dto';
 
 @Injectable()
 export class MonitorService {
   constructor(
     private prisma: PrismaService,
-    private notification: NotificationService,
+    private monitoring: MonitoringService,
   ) {}
 
   async checkLimit(user: User) {
@@ -77,14 +77,20 @@ export class MonitorService {
       throw new ForbiddenException('No change status access');
     }
 
-    const newStatus = matches.status === 'PAUSE' ? 'UP' : 'PAUSE';
+    const data = { newStatus: matches.status };
+
+    if (matches.status === 'PAUSE') {
+      data.newStatus = await this.monitoring.getStatusSite(matches.url);
+    } else {
+      data.newStatus = 'PAUSE';
+    }
 
     return this.prisma.monitor.update({
       where: {
         id,
       },
       data: {
-        status: newStatus,
+        status: data.newStatus,
       },
     });
   }
@@ -98,17 +104,17 @@ export class MonitorService {
 
     const { name, url, frequency } = dto;
 
-    await this.prisma.monitor.create({
+    const status = await this.monitoring.getStatusSite(url);
+
+    return await this.prisma.monitor.create({
       data: {
         name,
         url,
         frequency,
+        status: status,
         userId: user.id,
+        ckeckAt: new Date(),
       },
     });
-
-    // TODO loop check
-
-    return {};
   }
 }
