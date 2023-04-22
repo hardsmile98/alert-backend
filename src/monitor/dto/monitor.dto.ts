@@ -9,7 +9,7 @@ export class AddMonitorDto {
   url: string;
 
   @IsNotEmpty()
-  @Min(5)
+  @Min(10)
   @Max(60)
   frequency: number;
 }
