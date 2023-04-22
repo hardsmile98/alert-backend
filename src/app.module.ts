@@ -6,7 +6,6 @@ import { ConfigModule } from '@nestjs/config';
 import { MonitorModule } from './monitor/monitor.module';
 import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -18,7 +17,6 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     UserModule,
     PrismaModule,
     MonitorModule,
-    MonitoringModule,
     NotificationModule,
   ],
 })

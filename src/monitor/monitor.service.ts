@@ -2,18 +2,57 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
 } from '@nestjs/common';
+import axios from 'axios';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MonitoringService } from 'src/monitoring/monitoring.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { AddMonitorDto } from './dto';
 
 @Injectable()
 export class MonitorService {
-  constructor(
-    private prisma: PrismaService,
-    private monitoring: MonitoringService,
-  ) {}
+  private readonly logger = new Logger(MonitorService.name);
+  constructor(private prisma: PrismaService) {}
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async monitoring() {
+    this.logger.log('Called cron');
+
+    const allSites = await this.prisma.monitor.findMany({
+      where: {
+        NOT: {
+          status: 'PAUSE',
+        },
+      },
+      select: {
+        id: true,
+        url: true,
+        frequency: true,
+        status: true,
+        ckeckAt: true,
+      },
+    });
+
+    for (const site of allSites) {
+      const { id, url, ckeckAt, frequency } = site;
+
+      const minutesPassed = Math.floor(
+        (new Date().getTime() - ckeckAt.getTime()) / (60 * 1000),
+      );
+
+      if (minutesPassed < frequency) {
+        return;
+      }
+
+      const newStatus = await this.getStatusSite(url);
+
+      await this.prisma.monitor.update({
+        where: { id: id },
+        data: { status: newStatus, ckeckAt: new Date() },
+      });
+    }
+  }
 
   async checkLimit(user: User) {
     const countMonitors = await this.prisma.monitor.count({
@@ -80,7 +119,7 @@ export class MonitorService {
     const data = { newStatus: matches.status };
 
     if (matches.status === 'PAUSE') {
-      data.newStatus = await this.monitoring.getStatusSite(matches.url);
+      data.newStatus = await this.getStatusSite(matches.url);
     } else {
       data.newStatus = 'PAUSE';
     }
@@ -104,7 +143,7 @@ export class MonitorService {
 
     const { name, url, frequency } = dto;
 
-    const status = await this.monitoring.getStatusSite(url);
+    const status = await this.getStatusSite(url);
 
     return await this.prisma.monitor.create({
       data: {
@@ -116,5 +155,14 @@ export class MonitorService {
         ckeckAt: new Date(),
       },
     });
+  }
+
+  async getStatusSite(url: string) {
+    try {
+      await axios.get(url);
+      return 'UP';
+    } catch (error) {
+      return 'DOWN';
+    }
   }
 }
