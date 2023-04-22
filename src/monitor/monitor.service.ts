@@ -101,6 +101,10 @@ export class MonitorService {
       },
     });
 
+    if (!monitor) {
+      throw new BadRequestException('Monitoring not found');
+    }
+
     return monitor;
   }
 
