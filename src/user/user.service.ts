@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AddChannelDto, ChangePasswordDto } from './dto';
 import * as argon from 'argon2';
 import { User } from '@prisma/client';
+import { isEmail } from 'class-validator';
 
 @Injectable()
 export class UserService {
@@ -40,6 +41,13 @@ export class UserService {
 
   async addChannel(user: User, dto: AddChannelDto) {
     const { value, type } = dto;
+
+    if (type === 'email') {
+      if (!isEmail(value)) {
+        throw new BadRequestException('E-mail is not correct');
+      }
+    }
+
     const { id } = user;
 
     const matches = await this.prisma.chanel.findFirst({
