@@ -13,6 +13,14 @@ enum Status {
   PAUSE
 }
 
+model MonitorData {
+  id            Int         @id @default(autoincrement())
+  monitor       Monitor     @relation(fields: [monitorId], references: [id])
+  monitorId     Int
+  responseTime  Int
+  createdAt     DateTime @default(now())
+}
+
 model Monitor {
   id            Int      @id @default(autoincrement())
   name          String
@@ -21,6 +29,7 @@ model Monitor {
   status        Status   @default(UP)
   user          User     @relation(fields: [userId], references: [id])
   userId        Int
+  monitorData   MonitorData[]
   checkAt       DateTime 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

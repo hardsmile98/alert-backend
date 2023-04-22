@@ -21,7 +21,7 @@ export class MonitorService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async monitoring() {
-    this.logger.log('Called cron');
+    this.logger.log('Called cron monitoring');
 
     const allSites = await this.prisma.monitor.findMany({
       where: {
@@ -61,6 +61,41 @@ export class MonitorService {
       await this.prisma.monitor.update({
         where: { id: id },
         data: { status: newStatus, checkAt: new Date() },
+      });
+    }
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async getMonitoringData() {
+    this.logger.log('Called cron getMonitoringData');
+
+    const allSites = await this.prisma.monitor.findMany({
+      where: {
+        NOT: {
+          status: 'PAUSE',
+        },
+      },
+      select: {
+        id: true,
+        url: true,
+      },
+    });
+
+    for (const site of allSites) {
+      const { id, url } = site;
+
+      const start = Date.now();
+
+      await this.getStatusSite(url);
+
+      const end = Date.now();
+      const responseTime = end - start;
+
+      await this.prisma.monitorData.create({
+        data: {
+          monitorId: id,
+          responseTime,
+        },
       });
     }
   }
@@ -114,7 +149,25 @@ export class MonitorService {
       throw new BadRequestException('Monitoring not found');
     }
 
-    return monitor;
+    const data = await this.prisma.monitorData.findMany({
+      where: {
+        monitorId: monitorId,
+      },
+      select: {
+        id: true,
+        responseTime: true,
+        createdAt: true,
+      },
+      take: 30,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      data,
+      monitor,
+    };
   }
 
   async deleteMonitor(user: User, id: number) {
