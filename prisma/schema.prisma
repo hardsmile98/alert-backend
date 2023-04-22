@@ -21,7 +21,7 @@ model Monitor {
   status        Status   @default(UP)
   user          User     @relation(fields: [userId], references: [id])
   userId        Int
-  ckeckAt       DateTime 
+  checkAt       DateTime 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtGuard } from 'src/auth/guard';
 import { MonitorService } from './monitor.service';
 import { GetUser } from 'src/auth/decorator';
@@ -9,6 +17,11 @@ import { User } from '@prisma/client';
 @Controller('monitor')
 export class MonitorController {
   constructor(private monitorService: MonitorService) {}
+
+  @Get('/:id')
+  getMonitor(@GetUser() user: User, @Param('id') id: string) {
+    return this.monitorService.getMonitor(user, id);
+  }
 
   @Get('/')
   getMonitors(@GetUser() user: User) {

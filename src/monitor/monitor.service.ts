@@ -30,15 +30,15 @@ export class MonitorService {
         url: true,
         frequency: true,
         status: true,
-        ckeckAt: true,
+        checkAt: true,
       },
     });
 
     for (const site of allSites) {
-      const { id, url, ckeckAt, frequency } = site;
+      const { id, url, checkAt, frequency } = site;
 
       const minutesPassed = Math.floor(
-        (new Date().getTime() - ckeckAt.getTime()) / (60 * 1000),
+        (new Date().getTime() - checkAt.getTime()) / (60 * 1000),
       );
 
       if (minutesPassed < frequency) {
@@ -47,9 +47,11 @@ export class MonitorService {
 
       const newStatus = await this.getStatusSite(url);
 
+      this.logger.log(`Checked site: ${url}, status: ${newStatus}`);
+
       await this.prisma.monitor.update({
         where: { id: id },
-        data: { status: newStatus, ckeckAt: new Date() },
+        data: { status: newStatus, checkAt: new Date() },
       });
     }
   }
@@ -83,6 +85,23 @@ export class MonitorService {
       monitors,
       isLimit,
     };
+  }
+
+  async getMonitor(user: User, id: string) {
+    const monitorId = Number(id);
+
+    if (!Number.isInteger(monitorId)) {
+      throw new BadRequestException('Incorrect params');
+    }
+
+    const monitor = await this.prisma.monitor.findFirst({
+      where: {
+        id: monitorId,
+        userId: user.id,
+      },
+    });
+
+    return monitor;
   }
 
   async deleteMonitor(user: User, id: number) {
@@ -152,7 +171,7 @@ export class MonitorService {
         frequency,
         status: status,
         userId: user.id,
-        ckeckAt: new Date(),
+        checkAt: new Date(),
       },
     });
   }
