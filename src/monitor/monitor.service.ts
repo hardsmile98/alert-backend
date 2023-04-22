@@ -9,11 +9,15 @@ import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { AddMonitorDto } from './dto';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class MonitorService {
   private readonly logger = new Logger(MonitorService.name);
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notification: NotificationService,
+  ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async monitoring() {
@@ -27,6 +31,7 @@ export class MonitorService {
       },
       select: {
         id: true,
+        userId: true,
         url: true,
         frequency: true,
         status: true,
@@ -35,7 +40,7 @@ export class MonitorService {
     });
 
     for (const site of allSites) {
-      const { id, url, checkAt, frequency } = site;
+      const { id, url, checkAt, frequency, userId } = site;
 
       const minutesPassed = Math.floor(
         (new Date().getTime() - checkAt.getTime()) / (60 * 1000),
@@ -48,6 +53,10 @@ export class MonitorService {
       const newStatus = await this.getStatusSite(url);
 
       this.logger.log(`Checked site: ${url}, status: ${newStatus}`);
+
+      if (newStatus === 'DOWN') {
+        await this.notification.sendInUsAllUserChannels(userId, url);
+      }
 
       await this.prisma.monitor.update({
         where: { id: id },

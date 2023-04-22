@@ -1,11 +1,11 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { join } from 'path';
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
   constructor(
     private prisma: PrismaService,
     private mailerService: MailerService,
@@ -15,7 +15,7 @@ export class NotificationService {
     return await this.mailerService
       .sendMail({
         to: email,
-        subject: 'Notification AletSize',
+        subject: 'Notification AlertSize',
         template: join(__dirname, '/../templates', 'alert'),
         context: {
           url,
@@ -29,18 +29,24 @@ export class NotificationService {
       });
   }
 
-  async sendInUsAllUserChannels(user: User, url: string) {
+  async sendInUsAllUserChannels(userId: number, url: string) {
     const channels = await this.prisma.chanel.findMany({
-      where: { userId: user.id },
+      where: { userId: userId },
     });
 
-    channels.forEach(({ type, value }) => {
-      switch (type) {
-        case 'email':
-          return this.sendEmail(value, url);
-        default:
-          return;
+    for (const channel of channels) {
+      const { type, value } = channel;
+
+      try {
+        switch (type) {
+          case 'email':
+            return this.sendEmail(value, url);
+          default:
+            return;
+        }
+      } catch (e) {
+        this.logger.error(`Error send in channel: ${value}, error: ${e}`);
       }
-    });
+    }
   }
 }
