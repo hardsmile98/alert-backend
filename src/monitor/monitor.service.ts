@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import axios from 'axios';
-import { User } from '@prisma/client';
+import { Method, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { AddMonitorDto } from './dto';
@@ -29,18 +29,10 @@ export class MonitorService {
           status: 'PAUSE',
         },
       },
-      select: {
-        id: true,
-        userId: true,
-        url: true,
-        frequency: true,
-        status: true,
-        checkAt: true,
-      },
     });
 
     for (const site of allSites) {
-      const { id, url, checkAt, frequency, userId } = site;
+      const { id, url, checkAt, frequency, userId, method } = site;
 
       const minutesPassed = Math.floor(
         (new Date().getTime() - checkAt.getTime()) / (60 * 1000),
@@ -50,7 +42,7 @@ export class MonitorService {
         return;
       }
 
-      const newStatus = await this.getStatusSite(url);
+      const newStatus = await this.getStatusSite(url, method);
 
       this.logger.log(`Checked site: ${url}, status: ${newStatus}`);
 
@@ -78,15 +70,16 @@ export class MonitorService {
       select: {
         id: true,
         url: true,
+        method: true,
       },
     });
 
     for (const site of allSites) {
-      const { id, url } = site;
+      const { id, url, method } = site;
 
       const start = Date.now();
 
-      await this.getStatusSite(url);
+      await this.getStatusSite(url, method);
 
       const end = Date.now();
       const responseTime = end - start;
@@ -204,7 +197,7 @@ export class MonitorService {
     const data = { newStatus: matches.status };
 
     if (matches.status === 'PAUSE') {
-      data.newStatus = await this.getStatusSite(matches.url);
+      data.newStatus = await this.getStatusSite(matches.url, matches.method);
     } else {
       data.newStatus = 'PAUSE';
     }
@@ -226,15 +219,11 @@ export class MonitorService {
       throw new BadRequestException('Limit monitors for plan');
     }
 
-    const { name, url, frequency } = dto;
-
-    const status = await this.getStatusSite(url);
+    const status = await this.getStatusSite(dto.url, dto.method);
 
     return await this.prisma.monitor.create({
       data: {
-        name,
-        url,
-        frequency,
+        ...dto,
         status: status,
         userId: user.id,
         checkAt: new Date(),
@@ -242,9 +231,9 @@ export class MonitorService {
     });
   }
 
-  async getStatusSite(url: string) {
+  async getStatusSite(url: string, method: Method) {
     try {
-      await axios.get(url);
+      await axios({ method, url });
       return 'UP';
     } catch (error) {
       return 'DOWN';
