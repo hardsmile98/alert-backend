@@ -15,6 +15,11 @@ export class UserController {
     return {};
   }
 
+  @Delete('me')
+  deleteAccount(@GetUser() user: User) {
+    return this.userService.deleteAccount(user);
+  }
+
   @Get('profile')
   getProfle(@GetUser() user: User) {
     delete user.password;

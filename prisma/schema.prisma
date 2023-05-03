@@ -20,7 +20,7 @@ enum Method {
 
 model MonitorData {
   id            Int         @id @default(autoincrement())
-  monitor       Monitor     @relation(fields: [monitorId], references: [id])
+  monitor       Monitor     @relation(fields: [monitorId], references: [id], onDelete: Cascade)
   monitorId     Int
   responseTime  Int
   createdAt     DateTime @default(now())
@@ -33,7 +33,7 @@ model Monitor {
   frequency     Int
   status        Status   @default(UP)
   method        Method   @default(get)
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        Int
   monitorData   MonitorData[]
   checkAt       DateTime 
@@ -55,7 +55,7 @@ model Chanel {
   id          Int      @id @default(autoincrement())
   value       String   
   type        ChannelType
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
 }
 

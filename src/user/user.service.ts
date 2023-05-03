@@ -106,4 +106,16 @@ export class UserService {
       },
     });
   }
+
+  async deleteAccount(user: User) {
+    const { id } = user;
+
+    await this.prisma.user.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    return {};
+  }
 }
